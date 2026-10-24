@@ -5,6 +5,7 @@ import Header from "./components/Header.jsx";
 import Hero from "./components/Hero.jsx";
 import Brands from "./components/Brands.jsx";
 import Dsg from "./components/Dsg.jsx";
+import Fuel from "./components/Fuel.jsx";
 import Services from "./components/Services.jsx";
 import Approach from "./components/Approach.jsx";
 import Gallery from "./components/Gallery.jsx";
@@ -26,21 +27,28 @@ export default function App() {
   }, []);
 
   // The gallery (and its menu link) only appears once something is published,
-  // and the sections after it are numbered on from there.
-  const hasGallery = media.length > 0;
+  // so sections are numbered in order as they render.
+  // Photos set to "hero-dsg" / "hero-fuel" in /admin cycle in that hero slide's panel instead.
+  const gallery = media.filter((m) => !m.place || m.place === "gallery");
+  const heroPhotos = {
+    dsg: media.filter((m) => m.place === "hero-dsg"),
+    fuel: media.filter((m) => m.place === "hero-fuel"),
+  };
+  const hasGallery = gallery.length > 0;
   const nav = NAV.filter((n) => hasGallery || !n.gallery);
-  let next = hasGallery ? 5 : 4;
+  let next = 1;
 
   return (
     <>
       <Header nav={nav} />
       <main>
-        <Hero />
+        <Hero photos={heroPhotos} />
         <Brands />
-        <Dsg />
-        <Services />
-        <Approach />
-        {hasGallery && <Gallery num="04" items={media} />}
+        <Dsg num={pad(next++)} />
+        <Fuel num={pad(next++)} />
+        <Services num={pad(next++)} />
+        <Approach num={pad(next++)} />
+        {hasGallery && <Gallery num={pad(next++)} items={gallery} />}
         <Process num={pad(next++)} />
         <Faq num={pad(next++)} />
         <Booking num={pad(next++)} />

@@ -2,7 +2,7 @@ import { CONFIG } from "../config.js";
 import { PRINCIPLES } from "../content.js";
 import SectionHead from "./SectionHead.jsx";
 
-export default function Approach() {
+export default function Approach({ num }) {
   const items = CONFIG.warranty
     ? [...PRINCIPLES, ["Warranty", `Parts and labour covered for ${CONFIG.warranty}.`]]
     : PRINCIPLES;
@@ -10,7 +10,7 @@ export default function Approach() {
   return (
     <section className="section section--paper2" id="approach">
       <div className="wrap">
-        <SectionHead num="03" title="How we work">
+        <SectionHead num={num} title="How we work">
           Clear diagnosis, honest pricing and work done to factory procedure.
         </SectionHead>
         <ul className="principles">

@@ -1,11 +1,11 @@
 import { DSG_SYMPTOMS, DSG_WORK, GEARBOXES, OTHER_AUTOMATICS } from "../content.js";
 import SectionHead from "./SectionHead.jsx";
 
-export default function Dsg() {
+export default function Dsg({ num }) {
   return (
     <section className="section section--dark" id="dsg">
       <div className="wrap">
-        <SectionHead num="01" title="DSG and dual-clutch specialists">
+        <SectionHead num={num} title="DSG and dual-clutch specialists">
           A dual-clutch gearbox is precise, and so is fixing one. We diagnose the exact cause, then
           repair only what is needed, often without replacing the whole gearbox.
         </SectionHead>

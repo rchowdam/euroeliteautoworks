@@ -4,6 +4,7 @@ Upload in three steps, so big videos go straight to S3 and never through the API
 1. POST /media/uploads        -> where to send the file (a signed S3 form, or /media/local-upload)
 2. the browser POSTs the file there
 3. POST /media                -> the file is checked and added to the gallery
+A YouTube video is one step: POST /media/youtube with its link (nothing is stored but the id).
 """
 
 from typing import List
@@ -14,7 +15,7 @@ from sqlmodel import select
 from .. import storage
 from ..config import settings
 from ..database import SessionDep
-from ..models import Media, MediaCreate, MediaRead, MediaUpdate, MediaUploadRequest
+from ..models import MEDIA_PLACES, Media, MediaCreate, MediaRead, MediaUpdate, MediaUploadRequest, MediaYouTubeCreate
 
 router = APIRouter(prefix="/media", tags=["Media"])
 
@@ -59,6 +60,21 @@ def add_media(data: MediaCreate, session: SessionDep):
     return MediaRead.of(media)
 
 
+@router.post("/youtube", response_model=MediaRead, status_code=201)
+def add_youtube(data: MediaYouTubeCreate, session: SessionDep):
+    vid = storage.youtube_id(data.url)
+    if not vid:
+        raise HTTPException(status_code=422, detail="That doesn't look like a YouTube video link.")
+    key = f"youtube/{vid}"
+    if session.exec(select(Media).where(Media.key == key)).first():
+        raise HTTPException(status_code=409, detail="This video is already in the gallery.")
+    media = Media(key=key, kind="youtube", caption=data.caption, published=data.published)
+    session.add(media)
+    session.commit()
+    session.refresh(media)
+    return MediaRead.of(media)
+
+
 @router.get("", response_model=List[MediaRead])
 def list_media(session: SessionDep):
     rows = session.exec(select(Media).order_by(Media.created_at.desc())).all()
@@ -74,6 +90,12 @@ def update_media(media_id: int, data: MediaUpdate, session: SessionDep):
         media.caption = data.caption or None
     if data.published is not None:
         media.published = data.published
+    if data.place is not None:
+        if data.place not in MEDIA_PLACES:
+            raise HTTPException(status_code=422, detail="Unknown place")
+        if data.place != "gallery" and media.kind != "photo":
+            raise HTTPException(status_code=422, detail="Only photos can be shown in the hero.")
+        media.place = data.place
     session.add(media)
     session.commit()
     session.refresh(media)
@@ -85,6 +107,7 @@ def delete_media(media_id: int, session: SessionDep):
     media = session.get(Media, media_id)
     if not media:
         raise HTTPException(status_code=404, detail="Not found")
-    storage.delete(media.key)
+    if media.kind != "youtube":
+        storage.delete(media.key)
     session.delete(media)
     session.commit()

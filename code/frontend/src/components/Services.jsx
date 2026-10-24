@@ -1,12 +1,12 @@
 import { SERVICES } from "../content.js";
 import SectionHead from "./SectionHead.jsx";
 
-export default function Services() {
+export default function Services({ num }) {
   return (
     <section className="section" id="services">
       <div className="wrap">
-        <SectionHead num="02" title="Complete care for German cars">
-          From scheduled servicing to complex repairs, one workshop that knows your car.
+        <SectionHead num={num} title="Complete care for German cars">
+          Whatever the problem with your German car, from scheduled servicing to complex repairs, one workshop that knows it.
         </SectionHead>
         <ol className="grid-list">
           {SERVICES.map(([title, text], i) => (

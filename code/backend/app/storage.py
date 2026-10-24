@@ -5,12 +5,14 @@ On AWS: S3_BUCKET is set, so the browser uploads straight to s3://<bucket>/media
 short-lived signed form (videos are too big to pass through the API), and the app answers
 /media/... with a short-lived signed S3 link. The bucket stays private.
 `key` ("media/<name>") is what the database stores.
+YouTube videos are not stored here at all: their key is "youtube/<video id>".
 """
 
 import os
 import re
 import uuid
 from typing import BinaryIO, Optional
+from urllib.parse import parse_qs, urlparse
 
 from .config import settings
 
@@ -20,6 +22,7 @@ VIDEO_TYPES = {"video/mp4": "mp4", "video/webm": "webm", "video/quicktime": "mov
 CONTENT_TYPES = {ext: ct for ct, ext in {**PHOTO_TYPES, **VIDEO_TYPES}.items()}
 
 KEY_RE = re.compile(r"^media/[0-9a-f]{32}\.(jpg|png|webp|mp4|webm|mov)$")
+YOUTUBE_ID_RE = re.compile(r"^[A-Za-z0-9_-]{11}$")
 
 _s3 = None
 
@@ -38,6 +41,31 @@ def _client():
             endpoint_url=f"https://s3.{region}.amazonaws.com" if region else None,
         )
     return _s3
+
+
+def youtube_id(link: str) -> Optional[str]:
+    """The video id from a YouTube link (watch, youtu.be, shorts, embed, live), or None."""
+    link = link.strip()
+    if YOUTUBE_ID_RE.match(link):
+        return link
+    if "://" not in link:
+        link = "https://" + link
+    url = urlparse(link)
+    host = (url.hostname or "").lower()
+    for prefix in ("www.", "m.", "music."):
+        if host.startswith(prefix):
+            host = host[len(prefix):]
+    parts = url.path.strip("/").split("/")
+    if host == "youtu.be":
+        found = parts[0]
+    elif host in ("youtube.com", "youtube-nocookie.com"):
+        if url.path == "/watch":
+            found = parse_qs(url.query).get("v", [""])[0]
+        else:
+            found = parts[1] if len(parts) > 1 and parts[0] in ("shorts", "embed", "live", "v") else ""
+    else:
+        return None
+    return found if YOUTUBE_ID_RE.match(found) else None
 
 
 def kind_of(key: str) -> str:

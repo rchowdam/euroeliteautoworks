@@ -4,7 +4,7 @@ from pathlib import Path
 from typing import Annotated, Iterator
 
 from fastapi import Depends
-from sqlalchemy import event
+from sqlalchemy import event, inspect, text
 from sqlalchemy.engine import Engine
 from sqlmodel import Session, SQLModel, create_engine
 
@@ -54,6 +54,19 @@ def init_db() -> None:
     from . import models  # noqa: F401  (registers the tables)
 
     SQLModel.metadata.create_all(engine)
+    _add_missing_columns()
+
+
+def _add_missing_columns() -> None:
+    """create_all() makes new tables but never changes existing ones: add columns added later."""
+    added = {"media": {"place": "VARCHAR(20) NOT NULL DEFAULT 'gallery'"}}
+    insp = inspect(engine)
+    for table, columns in added.items():
+        have = {c["name"] for c in insp.get_columns(table)}
+        for name, ddl in columns.items():
+            if name not in have:
+                with engine.begin() as conn:
+                    conn.execute(text(f"ALTER TABLE {table} ADD COLUMN {name} {ddl}"))
 
 
 def get_session() -> Iterator[Session]:

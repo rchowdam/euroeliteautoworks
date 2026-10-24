@@ -32,11 +32,14 @@ euro_elite_auto_works/
 
 ## Landing page (built 2026-10-23)
 
-Sections in order: header → hero (headline + dual-clutch line diagram) → brand strip → 01 DSG
-(symptoms, what we do, gearbox table) → 02 services (8 tiles) → 03 how we work → [04 gallery
+Sections in order: header → hero slider (2 slides in `HERO_SLIDES`: DSG with the dual-clutch line
+diagram, Fuel systems with the fuel-system diagram; tabs underneath, auto-advance 7 s when the red bar
+under the active tab finishes, paused on hover/focus, swipe on phones, off with reduced motion) → brand strip → 01 DSG
+(symptoms, what we do, gearbox table) → 02 fuel systems (same layout, dark: symptoms, what we do,
+injector/pump makes bench-tested, `FUEL_*` in content.js) → 03 services (9 tiles, 3×3; Fuel system added 2026-10-24) → 04 how we work → [05 gallery
 "Inside the workshop"] → process (5 steps) → FAQ → booking form + contact → footer.
 The gallery and its "Workshop" menu link only show once something is published from `/admin`;
-the numbers of the sections after it are worked out in `App.jsx` (04–06 without it, 05–07 with it).
+all section numbers are worked out in order in `App.jsx` (process/FAQ/booking 05–07 without it, 06–08 with it).
 
 - **Design: simple, no gradients** (user's request). Flat colours, no shadows, 1px hairlines,
   square corners (2px), numbered sections with a red rule. **Colours follow the logo / business card**
@@ -59,6 +62,8 @@ the numbers of the sections after it are worked out in `App.jsx` (04–06 withou
   (DSG/gearbox focus, symptoms, trust points, FAQ, WhatsApp booking). **Did not copy** their ratings,
   counts, "#1"/"30–50% cheaper" claims or testimonials: do not add numbers, statistics, reviews or
   named dealer tools unless the user gives real ones.
+- Big screens: `html { zoom }` steps up the whole page (1.125 at 1600px → 1.5 at 2560px, 1.875 at 3200px),
+  so it keeps filling the width; 1440px and below unchanged.
 - Responsive breakpoints 1024 / 900 / 640 px; gearbox table stacks into rows on phones;
   inputs are 16px on touch (no iOS zoom). Checked at 1440px and 390px: no sideways scroll.
 
@@ -72,11 +77,18 @@ the numbers of the sections after it are worked out in `App.jsx` (04–06 withou
 - Gallery (2026-10-23): table `media` (key `media/<uuid>.<ext>`, kind photo/video, caption, published).
   Office page **`/admin`** (`src/admin/Admin.jsx`, lazy-loaded; sign in with `ADMIN_KEY`, kept in
   sessionStorage) uploads photos (JPG/PNG/WebP ≤15 MB) and videos (MP4/WebM/MOV ≤300 MB), edits
-  captions, hides/shows and deletes. `app/storage.py`: with `S3_BUCKET` set the browser uploads
+  captions, hides/shows and deletes. **YouTube links** too (2026-10-24): `POST /api/media/youtube`, kind
+  `youtube`, key `youtube/<id>` (nothing stored); the site shows the thumbnail and loads the
+  youtube-nocookie player only on click (`components/YouTube.jsx`).
+  **Hero photos** (2026-10-24): each photo has `place` = gallery / hero-dsg / hero-fuel ("Show on" in
+  `/admin`); hero photos fade in that slide's panel every 3.5 s instead of the line drawing (drawing
+  shows when a slide has none), and the slide stays up long enough to show each once. The `place`
+  column is added to an existing table by `_add_missing_columns()` in `database.py` (create_all
+  never alters tables), which is how to add columns later too. `app/storage.py`: with `S3_BUCKET` set the browser uploads
   **straight to S3** with a signed form (big videos never pass through the API, so it also works on
   Lambda), the bucket stays private and `/media/<name>` redirects to a 1-hour signed link. Without
   it files go to `code/backend/uploads/` (git-ignored). Bucket CORS + IAM steps: backend README.
-- Tests: `cd code/backend && .venv/bin/python -m pytest -q` (12 tests, all passing).
+- Tests: `cd code/backend && .venv/bin/python -m pytest -q` (16 tests, all passing).
 
 ## Open questions (ask the user; do not assume)
 

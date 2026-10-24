@@ -1,12 +1,19 @@
 import { useEffect, useRef, useState } from "react";
 import { CONFIG } from "../config.js";
 import Logo from "../components/Logo.jsx";
+import YouTube from "../components/YouTube.jsx";
 
-// Office page at /admin: upload photos and videos for the gallery.
+// Office page at /admin: upload photos and videos, or add YouTube links, for the gallery.
 // Access is the shared office key (ADMIN_KEY on the server), kept for this browser tab only.
 // Replace with real logins (as in Steam Car Wash Pro) when there is a team portal.
 
 const KEY_STORE = "eeaw-admin-key";
+// Where a photo shows on the website (videos and YouTube links: gallery only).
+const PLACES = [
+  ["gallery", "Gallery"],
+  ["hero-dsg", "Hero · DSG slide"],
+  ["hero-fuel", "Hero · Fuel systems slide"],
+];
 const ACCEPT = "image/jpeg,image/png,image/webp,video/mp4,video/webm,video/quicktime";
 
 function readKey() {
@@ -142,6 +149,8 @@ function MediaManager({ adminKey, onBadKey }) {
   const [items, setItems] = useState(null);
   const [uploads, setUploads] = useState([]);
   const [error, setError] = useState("");
+  const [ytLink, setYtLink] = useState("");
+  const [ytBusy, setYtBusy] = useState(false);
   const fileInput = useRef(null);
 
   const call = async (path, opts) => {
@@ -188,6 +197,20 @@ function MediaManager({ adminKey, onBadKey }) {
     })();
   }
 
+  async function addYouTube(e) {
+    e.preventDefault();
+    setYtBusy(true);
+    setError("");
+    try {
+      const item = await call("/media/youtube", { method: "POST", body: { url: ytLink } });
+      setItems((list) => [item, ...(list || [])]);
+      setYtLink("");
+    } catch (err) {
+      setError(err.message);
+    }
+    setYtBusy(false);
+  }
+
   async function update(item, change) {
     try {
       const saved = await call(`/media/${item.id}`, { method: "PATCH", body: change });
@@ -198,7 +221,8 @@ function MediaManager({ adminKey, onBadKey }) {
   }
 
   async function remove(item) {
-    if (!window.confirm(`Delete this ${item.kind}? It is removed from the website and from storage.`)) return;
+    const where = item.kind === "youtube" ? "the website (it stays on YouTube)" : "the website and from storage";
+    if (!window.confirm(`Delete this ${item.kind === "youtube" ? "YouTube video" : item.kind}? It is removed from ${where}.`)) return;
     try {
       await call(`/media/${item.id}`, { method: "DELETE" });
       setItems((list) => list.filter((m) => m.id !== item.id));
@@ -216,7 +240,8 @@ function MediaManager({ adminKey, onBadKey }) {
           <span className="eyebrow">Website</span>
           <h1>Photos &amp; videos</h1>
           <p className="admin__sub">
-            Shown in the “Inside the workshop” section of the website, newest first.
+            Shown in the “Inside the workshop” section of the website, newest first. Photos can go
+            in a hero slide instead, where they fade one after the other.
             {items && ` ${published} of ${items.length} on the site.`}
           </p>
         </div>
@@ -226,6 +251,22 @@ function MediaManager({ adminKey, onBadKey }) {
         <input ref={fileInput} type="file" accept={ACCEPT} multiple hidden onChange={pick} />
       </div>
       <p className="admin__hint">JPG, PNG or WebP photos; MP4, WebM or MOV videos. MP4 plays in every browser.</p>
+
+      <form className="admin__yt" onSubmit={addYouTube}>
+        <label className="field">
+          <span className="field__label">Or add a YouTube video</span>
+          <input
+            value={ytLink}
+            onChange={(e) => setYtLink(e.target.value)}
+            inputMode="url"
+            placeholder="Paste the link, e.g. https://youtu.be/…"
+            required
+          />
+        </label>
+        <button className="btn btn--dark" disabled={ytBusy}>
+          {ytBusy ? "Adding…" : "Add video"}
+        </button>
+      </form>
 
       {error && (
         <p className="form__msg form__msg--error" role="alert">
@@ -282,7 +323,9 @@ function MediaCard({ item, onUpdate, onRemove }) {
   return (
     <li className={`media-card${item.published ? "" : " is-hidden"}`}>
       <div className="media-card__thumb">
-        {item.kind === "video" ? (
+        {item.kind === "youtube" ? (
+          <YouTube id={item.youtube_id} title={item.caption} />
+        ) : item.kind === "video" ? (
           <video src={`${item.url}#t=0.1`} controls playsInline preload="metadata" />
         ) : (
           <img src={item.url} alt="" loading="lazy" />
@@ -303,12 +346,30 @@ function MediaCard({ item, onUpdate, onRemove }) {
             }}
           />
         </label>
+        {item.kind === "photo" && (
+          <label className="field">
+            <span className="field__label">Show on</span>
+            <select value={item.place || "gallery"} onChange={(e) => onUpdate(item, { place: e.target.value })}>
+              {PLACES.map(([value, label]) => (
+                <option key={value} value={value}>
+                  {label}
+                </option>
+              ))}
+            </select>
+          </label>
+        )}
         <div className="media-card__row">
           <label className="check">
             <input type="checkbox" checked={item.published} onChange={(e) => onUpdate(item, { published: e.target.checked })} />
             On the website
           </label>
-          <span className="mono media-card__meta">{mb(item.size)}</span>
+          {item.kind === "youtube" ? (
+            <a className="mono media-card__meta" href={item.url} target="_blank" rel="noreferrer">
+              Open on YouTube
+            </a>
+          ) : (
+            <span className="mono media-card__meta">{mb(item.size)}</span>
+          )}
           <button className="link-btn" onClick={() => onRemove(item)}>
             Delete
           </button>

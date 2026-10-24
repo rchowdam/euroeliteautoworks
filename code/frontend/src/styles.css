@@ -255,14 +255,95 @@ a {
   align-items: center;
 }
 
-.hero h1 {
+.hero__title {
   font-size: clamp(44px, 6vw, 80px);
   max-width: 14ch;
 }
 
-.hero h1 em {
+.hero__title em {
   font-style: normal;
   color: var(--accent);
+}
+
+/* Slides sit in one grid cell, so the hero keeps the height of the tallest one. */
+.hero__stack {
+  display: grid;
+}
+
+.hero__slide {
+  grid-area: 1 / 1;
+  opacity: 0;
+  visibility: hidden;
+  transition: opacity 0.5s, visibility 0.5s;
+}
+
+.hero__slide.is-active {
+  opacity: 1;
+  visibility: visible;
+}
+
+.hero__tabs {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 24px;
+  margin-top: 56px;
+}
+
+.hero__tab {
+  position: relative;
+  padding: 14px 0 0;
+  border: 0;
+  border-top: 2px solid var(--line);
+  background: none;
+  font: 600 14px/1.3 var(--font-body);
+  letter-spacing: 0.04em;
+  text-align: left;
+  color: var(--ink-3);
+  cursor: pointer;
+}
+
+.hero__tab:hover,
+.hero__tab.is-active {
+  color: var(--ink);
+}
+
+.hero__tab .mono {
+  color: var(--accent-text);
+  margin-right: 6px;
+}
+
+/* Fills across the active tab; when it ends the next slide shows. */
+.hero__bar {
+  position: absolute;
+  top: -2px;
+  left: 0;
+  height: 2px;
+  width: 100%;
+  background: var(--accent);
+  transform-origin: left;
+  animation: hero-bar 7s linear;
+}
+
+.hero.is-paused .hero__bar {
+  animation-play-state: paused;
+}
+
+@keyframes hero-bar {
+  from {
+    transform: scaleX(0);
+  }
+  to {
+    transform: scaleX(1);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .hero__slide {
+    transition: none;
+  }
+  .hero__bar {
+    animation: none;
+  }
 }
 
 .callus {
@@ -305,6 +386,37 @@ a {
   background: var(--white);
   border: 1px solid var(--line);
   padding: 28px 28px 20px;
+}
+
+/* Hero photos: same 7:5 shape as the line drawings, so the panel doesn't change size. */
+.hero__photos {
+  position: relative;
+  aspect-ratio: 7 / 5;
+  background: var(--paper-2);
+  overflow: hidden;
+}
+
+.hero__photos img {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  opacity: 0;
+  transition: opacity 0.8s;
+}
+
+.hero__photos img.is-shown {
+  opacity: 1;
+}
+
+.hero__count {
+  position: absolute;
+  right: 8px;
+  bottom: 8px;
+  padding: 2px 6px;
+  background: var(--paper);
+  font-size: 11px;
 }
 
 .hero__panel figcaption {
@@ -383,6 +495,11 @@ a {
   background: var(--dark);
   color: var(--on-dark);
   border-bottom: 0;
+}
+
+/* Two dark sections in a row (DSG, then fuel) are split by a hairline. */
+.section--dark + .section--dark {
+  border-top: 1px solid var(--dark-line);
 }
 
 .section--dark .label {
@@ -526,7 +643,7 @@ a {
   margin: 0;
   padding: 0;
   display: grid;
-  grid-template-columns: repeat(4, 1fr);
+  grid-template-columns: repeat(3, 1fr);
   border-top: 1px solid var(--line);
   border-left: 1px solid var(--line);
 }
@@ -629,6 +746,62 @@ a {
 
 .gallery__item video {
   object-fit: cover;
+}
+
+/* YouTube: thumbnail + play button until clicked, then the player in the same box. */
+.yt {
+  position: relative;
+  display: block;
+  width: 100%;
+  aspect-ratio: 4 / 3;
+  padding: 0;
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  background: var(--ink);
+  overflow: hidden;
+  cursor: pointer;
+}
+
+.media-card__thumb .yt {
+  height: 100%;
+  border: 0;
+  border-radius: 0;
+}
+
+.yt img {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  /* YouTube's 4:3 thumbnail has black bars above and below a 16:9 video: crop them. */
+  transform: scale(1.34);
+}
+
+.yt__play {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 68px;
+  height: 48px;
+  margin: -24px 0 0 -34px;
+  background: var(--accent);
+  border-radius: var(--radius);
+  transition: background-color 0.15s;
+}
+
+.yt__play::after {
+  content: "";
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  margin: -10px 0 0 -7px;
+  border-style: solid;
+  border-width: 10px 0 10px 17px;
+  border-color: transparent transparent transparent var(--white);
+}
+
+.yt:hover .yt__play {
+  background: var(--ink);
 }
 
 .gallery__caption {
@@ -1040,6 +1213,10 @@ a {
   border-bottom: 1px solid var(--ink);
 }
 
+.admin__head > .btn {
+  flex-shrink: 0;
+}
+
 .admin__head .eyebrow {
   margin-bottom: 10px;
 }
@@ -1050,9 +1227,21 @@ a {
 }
 
 .admin__hint {
-  margin: 12px 0 32px;
+  margin: 12px 0 20px;
   font-size: 14px;
   color: var(--ink-3);
+}
+
+.admin__yt {
+  display: flex;
+  align-items: flex-end;
+  gap: 12px;
+  max-width: 640px;
+  margin-bottom: 32px;
+}
+
+.admin__yt .field {
+  flex: 1;
 }
 
 .admin__empty {
@@ -1193,6 +1382,39 @@ a {
 }
 
 /* ---- Responsive ---- */
+/* Big screens: scale the whole page up in steps (type, spacing and the 1200px column
+   together), so it keeps filling about three quarters of the width. 1440px and below
+   are unchanged. Browsers without `zoom` simply show the normal size. */
+@media (min-width: 1600px) {
+  html {
+    zoom: 1.125;
+  }
+}
+
+@media (min-width: 1920px) {
+  html {
+    zoom: 1.25;
+  }
+}
+
+@media (min-width: 2240px) {
+  html {
+    zoom: 1.4;
+  }
+}
+
+@media (min-width: 2560px) {
+  html {
+    zoom: 1.5;
+  }
+}
+
+@media (min-width: 3200px) {
+  html {
+    zoom: 1.875;
+  }
+}
+
 @media (max-width: 1024px) {
   .grid-list {
     grid-template-columns: repeat(2, 1fr);
@@ -1243,6 +1465,9 @@ a {
   }
   .hero {
     padding: 64px 0;
+  }
+  .hero__tabs {
+    margin-top: 40px;
   }
   .hero__grid,
   .dsg__grid,
@@ -1372,6 +1597,10 @@ a {
     padding-top: 36px;
   }
   .admin__head {
+    flex-direction: column;
+    align-items: stretch;
+  }
+  .admin__yt {
     flex-direction: column;
     align-items: stretch;
   }

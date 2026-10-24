@@ -5,12 +5,33 @@ export const BRANDS = ["Volkswagen", "Audi", "Škoda", "Porsche", "BMW", "Merced
 
 export const NAV = [
   { href: "#dsg", label: "DSG" },
+  { href: "#fuel", label: "Fuel" },
   { href: "#services", label: "Services" },
   { href: "#approach", label: "Approach" },
   // Only shown once photos or videos are published from /admin.
   { href: "#gallery", label: "Workshop", gallery: true },
   { href: "#process", label: "Process" },
   { href: "#faq", label: "FAQ" },
+];
+
+// Hero slides. `title` is [plain part, red part]; `diagram` picks the line drawing in Hero.jsx.
+export const HERO_SLIDES = [
+  {
+    id: "dsg",
+    tab: "DSG & dual-clutch",
+    eyebrow: "German car specialists · DSG experts",
+    title: ["German engineering deserves a ", "specialist."],
+    lead: "Euro Elite Auto Works services and repairs Volkswagen, Audi, Škoda, Porsche, BMW, Mercedes-Benz and MINI, whatever the fault, with particular expertise in DSG and dual-clutch transmissions.",
+    codes: "DQ200 · DQ250 · DQ381 · DQ500 · S tronic · PDK",
+  },
+  {
+    id: "fuel",
+    tab: "Fuel systems",
+    eyebrow: "German car specialists · Fuel systems",
+    title: ["Fuel system faults, found and ", "fixed."],
+    lead: "Injectors, high- and low-pressure fuel pumps and fuel pressure faults on petrol and diesel engines. Hard starting, misfires or loss of power: we trace the cause before replacing parts.",
+    codes: "TSI · TFSI · TDI · Direct injection · Common rail",
+  },
 ];
 
 export const DSG_SYMPTOMS = [
@@ -42,9 +63,38 @@ export const GEARBOXES = [
 
 export const OTHER_AUTOMATICS = "Also: ZF 8HP, Aisin and Mercedes-Benz 7G / 9G-TRONIC automatics.";
 
+export const FUEL_SYMPTOMS = [
+  "Long cranking or hard starting, hot or cold",
+  "Misfire, rough idle or shaking at idle",
+  "Loss of power or hesitation when accelerating",
+  "Engine warning light or limp mode",
+  "Smoke from the exhaust or a smell of fuel",
+  "Higher fuel consumption than usual",
+];
+
+export const FUEL_WORK = [
+  ["Injector bench test", "Each injector tested on our workbench for spray pattern, delivery and leak-off, compared across all cylinders."],
+  ["Fuel pump bench test", "High- and low-pressure fuel pumps tested on the bench for pressure and delivery."],
+  ["Fuel pressure diagnosis", "Live pressure readings to find whether the fault is the pump, a sensor, the regulator or a leak."],
+  ["Replacement & coding", "Injectors and pumps replaced to specification, with injector codes entered in the engine control unit."],
+  ["Filters & lines", "Fuel filter service and leak checks on lines and seals."],
+  ["Road test", "Every car is driven after the work, with fuel pressures and trims checked."],
+];
+
+// Injector and pump makes tested on the workbench.
+export const FUEL_MAKES = [
+  { make: "Bosch", parts: "Injectors · high-pressure pumps", type: "Petrol and diesel" },
+  { make: "Continental", parts: "Injectors · high-pressure pumps", type: "Petrol and diesel, including Siemens VDO piezo" },
+  { make: "Delphi", parts: "Injectors · high-pressure pumps", type: "Diesel common rail" },
+  { make: "Denso", parts: "Injectors · high-pressure pumps", type: "Petrol and diesel" },
+];
+
+export const FUEL_NOTE = "Petrol direct injection (TSI, TFSI) and diesel common rail (TDI, CDI and BMW diesels).";
+
 export const SERVICES = [
   ["DSG & automatic transmission", "Mechatronics, clutch packs, adaptations and oil service for dual-clutch and automatic gearboxes."],
   ["Engine", "TSI, TFSI and TDI engines: timing chains, oil leaks, turbochargers, misfires and carbon cleaning."],
+  ["Fuel system", "Injectors, high- and low-pressure fuel pumps, fuel pressure faults and hard starting, petrol and diesel."],
   ["Diagnostics & coding", "Fault tracing with dealer-level software, module coding and retrofits."],
   ["Scheduled service", "Service to the manufacturer's schedule, with oils and filters to the correct specification."],
   ["Suspension & steering", "Shock absorbers, bushes, control arms, air suspension and wheel alignment."],
@@ -89,7 +139,7 @@ export const FAQ = [
   ],
   [
     "Which cars do you work on?",
-    "Volkswagen, Audi, Škoda, Porsche, BMW, Mercedes-Benz and MINI: petrol, diesel and automatic.",
+    "Volkswagen, Audi, Škoda, Porsche, BMW, Mercedes-Benz and MINI: petrol, diesel and automatic, and any kind of fault, from routine servicing to major repairs.",
   ],
   [
     "Will I know the price before you start?",

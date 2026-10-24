@@ -76,15 +76,20 @@ class EnquiryUpdate(SQLModel):
     status: EnquiryStatus
 
 
+# Where a photo shows on the landing page: the gallery, or one of the hero slides' panels.
+MEDIA_PLACES = ("gallery", "hero-dsg", "hero-fuel")
+
+
 class Media(SQLModel, table=True):
     """A photo or video for the gallery on the landing page."""
 
     id: Optional[int] = Field(default=None, primary_key=True)
     key: str = Field(max_length=80, unique=True)  # "media/<name>" in UPLOAD_DIR or the S3 bucket
-    kind: str = Field(max_length=10)  # photo / video
+    kind: str = Field(max_length=10)  # photo / video / youtube
     size: int = 0
     caption: Optional[str] = Field(default=None, max_length=200)
     published: bool = Field(default=True, index=True)
+    place: str = Field(default="gallery", max_length=20)  # one of MEDIA_PLACES (hero: photos only)
     created_at: datetime = Field(default_factory=utcnow, index=True)
 
 
@@ -106,9 +111,23 @@ class MediaCreate(SQLModel):
         return v or None
 
 
+class MediaYouTubeCreate(SQLModel):
+    url: str = Field(max_length=300)
+    caption: Optional[str] = Field(default=None, max_length=200)
+    published: bool = True
+
+    @field_validator("caption", mode="before")
+    @classmethod
+    def _blank_to_none(cls, v):
+        if isinstance(v, str):
+            v = v.strip()
+        return v or None
+
+
 class MediaUpdate(SQLModel):
     caption: Optional[str] = Field(default=None, max_length=200)
     published: Optional[bool] = None
+    place: Optional[str] = None
 
     @field_validator("caption", mode="before")
     @classmethod
@@ -122,9 +141,14 @@ class MediaRead(SQLModel):
     url: str
     caption: Optional[str]
     published: bool
+    place: str
     size: int
     created_at: datetime
+    youtube_id: Optional[str] = None  # set for kind "youtube"; `url` is then the watch page
 
     @classmethod
     def of(cls, m: "Media") -> "MediaRead":
+        if m.kind == "youtube":
+            vid = m.key.split("/", 1)[1]
+            return cls(**m.model_dump(exclude={"key"}), url=f"https://www.youtube.com/watch?v={vid}", youtube_id=vid)
         return cls(**m.model_dump(exclude={"key"}), url=f"/{m.key}")

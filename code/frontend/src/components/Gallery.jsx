@@ -1,10 +1,11 @@
 import { useEffect, useState } from "react";
 import { GALLERY } from "../content.js";
 import SectionHead from "./SectionHead.jsx";
+import YouTube from "./YouTube.jsx";
 
 const PAGE = 9;
 
-// Photos and videos added in /admin. App only renders this when there is at least one.
+// Photos, videos and YouTube links added in /admin. App only renders this when there is at least one.
 export default function Gallery({ num, items }) {
   const [shown, setShown] = useState(PAGE);
   const [open, setOpen] = useState(null);
@@ -18,7 +19,9 @@ export default function Gallery({ num, items }) {
         <ul className="gallery">
           {items.slice(0, shown).map((m) => (
             <li key={m.id} className="gallery__item">
-              {m.kind === "video" ? (
+              {m.kind === "youtube" ? (
+                <YouTube id={m.youtube_id} title={m.caption} />
+              ) : m.kind === "video" ? (
                 // "#t=0.1" makes browsers show the first frame instead of a blank box.
                 <video src={`${m.url}#t=0.1`} controls playsInline preload="metadata" />
               ) : (

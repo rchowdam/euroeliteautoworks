@@ -78,3 +78,64 @@ def test_s3_mode_gives_a_signed_form(client, monkeypatch):
     r = client.get("/" + target["key"], follow_redirects=False)
     assert r.status_code == 307 and "X-Amz-Signature" in r.headers["location"]
     monkeypatch.setattr(storage, "_s3", None)
+
+
+def test_youtube_links(client):
+    vid = "dQw4w9WgXcQ"
+    for link in [
+        f"https://www.youtube.com/watch?v={vid}&t=42s",
+        f"https://youtu.be/{vid}?si=abc",
+        f"youtube.com/shorts/{vid}",
+        f"https://m.youtube.com/watch?feature=share&v={vid}",
+        f"https://www.youtube.com/embed/{vid}",
+        f"https://www.youtube.com/live/{vid}",
+        vid,
+    ]:
+        assert storage.youtube_id(link) == vid, link
+    for bad in ["https://vimeo.com/123", "https://www.youtube.com/@channel", "https://youtu.be/short", "hello"]:
+        assert storage.youtube_id(bad) is None, bad
+
+
+def test_add_youtube_to_gallery(client):
+    r = client.post("/api/media/youtube", json={"url": "https://youtu.be/dQw4w9WgXcQ", "caption": " DSG road test "}, headers=ADMIN)
+    assert r.status_code == 201, r.text
+    item = r.json()
+    assert item["kind"] == "youtube" and item["youtube_id"] == "dQw4w9WgXcQ" and item["caption"] == "DSG road test"
+    assert item["url"] == "https://www.youtube.com/watch?v=dQw4w9WgXcQ"
+    assert [g["id"] for g in client.get("/api/public/media").json()] == [item["id"]]
+
+    # Same video twice, a non-YouTube link, and no key
+    assert client.post("/api/media/youtube", json={"url": "https://www.youtube.com/watch?v=dQw4w9WgXcQ"}, headers=ADMIN).status_code == 409
+    assert client.post("/api/media/youtube", json={"url": "https://vimeo.com/1"}, headers=ADMIN).status_code == 422
+    assert client.post("/api/media/youtube", json={"url": "https://youtu.be/dQw4w9WgXcQ"}).status_code == 401
+
+    assert client.delete(f"/api/media/{item['id']}", headers=ADMIN).status_code == 204
+    assert client.get("/api/public/media").json() == []
+
+
+def test_hero_place(client):
+    item = upload(client)
+    assert item["place"] == "gallery"
+    r = client.patch(f"/api/media/{item['id']}", json={"place": "hero-fuel"}, headers=ADMIN)
+    assert r.status_code == 200 and r.json()["place"] == "hero-fuel"
+    assert client.get("/api/public/media").json()[0]["place"] == "hero-fuel"
+    assert client.patch(f"/api/media/{item['id']}", json={"place": "footer"}, headers=ADMIN).status_code == 422
+
+    video = upload(client, content=b"v" * 100, content_type="video/mp4")
+    assert client.patch(f"/api/media/{video['id']}", json={"place": "hero-dsg"}, headers=ADMIN).status_code == 422
+
+
+def test_place_column_added_to_old_table(client):
+    """A database made before `place` existed gets the column on start-up."""
+    from sqlalchemy import inspect, text
+
+    from app.database import engine, init_db
+
+    with engine.begin() as conn:
+        conn.execute(text("DROP TABLE media"))
+        conn.execute(text("CREATE TABLE media (id INTEGER PRIMARY KEY, key VARCHAR(80), kind VARCHAR(10), size INTEGER,"
+                          " caption VARCHAR(200), published BOOLEAN, created_at DATETIME)"))
+        conn.execute(text("INSERT INTO media VALUES (1, 'youtube/dQw4w9WgXcQ', 'youtube', 0, NULL, 1, '2026-01-01')"))
+    init_db()
+    assert "place" in {c["name"] for c in inspect(engine).get_columns("media")}
+    assert client.get("/api/public/media").json()[0]["place"] == "gallery"
