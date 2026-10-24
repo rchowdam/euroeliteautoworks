@@ -104,8 +104,10 @@ Local `.venv` boto3 can't use `aws login` credentials (needs botocore[crt]): use
 
 - 2026-10-23 — Project created. Same stack as Steam Car Wash Pro (FastAPI + React/Vite).
   Landing page built in React (not plain HTML) because the user asked for "python, react".
-  Git repo initialised locally, nothing committed, no remote yet.
+  Git repo initialised locally.
 - 2026-10-23 — Gallery of photos and videos + `/admin` upload page. S3 via browser-direct signed
   uploads, local folder as fallback (same storage idea as the sister project's job photos).
 - 2026-10-23 — Logo, colours (white / black / logo red) and contacts from the business card;
   WhatsApp = Arun. Deployed to AWS like the sister project; database shares its Aurora cluster.
+- 2026-10-24 — First commit pushed to GitHub: https://github.com/rchowdam/euroeliteautoworks (`main`).
+  `code/deploy/lambda.env` and `.env` stay git-ignored (secrets).
