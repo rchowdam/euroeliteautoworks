@@ -1,0 +1,14 @@
+.DS_Store
+# Python
+__pycache__/
+*.pyc
+.venv/
+.pytest_cache/
+code/backend/.env
+code/backend/data/
+code/backend/uploads/
+# Lambda environment values (secrets) — see code/deploy/README.md
+code/deploy/lambda.env
+# Node
+node_modules/
+code/frontend/dist/
